@@ -1,183 +1,298 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>HBD love</title>	    
-    <link type="text/css" rel="stylesheet" href="./file/default.css">
-    <script type="text/javascript" src="./file/jquery.min.js"></script>
-    <script type="text/javascript" src="./file/jscex.min.js"></script>
-    <script type="text/javascript" src="./file/jscex-parser.js"></script>
-    <script type="text/javascript" src="./file/jscex-jit.js"></script>
-    <script type="text/javascript" src="./file/jscex-builderbase.min.js"></script>
-    <script type="text/javascript" src="./file/jscex-async.min.js"></script>
-    <script type="text/javascript" src="./file/jscex-async-powerpack.min.js"></script>
-    <script type="text/javascript" src="./file/functions.js" charset="utf-8"></script>
-    <script type="text/javascript" src="./file/love.js" charset="utf-8"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Budget Manager - Track Your Finances</title>
+    <link rel="stylesheet" href="css/styles.css">
     <script>
-        function playAudio() {
-            var audio = document.getElementById("myAudio");
-            audio.play();
-        }
+        // Chart.js fallback - simple chart implementation
+        window.Chart = function(ctx, config) {
+            this.ctx = ctx;
+            this.config = config;
+            this.canvas = ctx.canvas || ctx;
+            this.destroy = function() {};
+            this.toBase64Image = function() { return ''; };
+            
+            // Simple visualization fallback
+            if (this.canvas && this.canvas.getContext) {
+                const context = this.canvas.getContext('2d');
+                context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                context.font = '16px Arial';
+                context.fillStyle = '#6b7280';
+                context.textAlign = 'center';
+                context.textBaseline = 'middle';
+                context.fillText('Chart visualization', this.canvas.width / 2, this.canvas.height / 2);
+                context.fillText('(Chart.js not available)', this.canvas.width / 2, this.canvas.height / 2 + 25);
+            }
+            
+            return this;
+        };
     </script>
+    <script src="jquery.min.js"></script>
 </head>
 <body>
-    <div id="main">
-        <div id="error"><a href="http://www.google.cn/chrome/intl/zh-CN/landing_chrome.html?hl=zh-CN&brand=CHMI">Chrome</a> (<a href="http://firefox.com.cn/download/">Firefox</a>)</div>
-        <audio autoplay="autoplay" height="100" width="100" id="myAudio">
-            <source src="aud.mp3" type="audio/mp3" />
-            <embed height="100" width="100" src="aud.mp3" />
-        </audio>
-        <div id="wrap">
-            <div id="text">
-                <div id="code">
-                    <span class="say">My beautiful Boushonaaaaa 💞</span><br>
-                    <span class="say">Happy Birthday 🎈</span><br>
-                    <span class="say">May God Bless Youuuu In Mvery Momement 🍀</span><br>
-                    <span class="say">And give u many happiness And Achieves Your Goals 💕</span><br>
-                    <span class="say">I loved youuuu sooo muchhh ❤️</span><br>
-                    <span class="say">And I will always love uuuu 🥺 ❤️</span><br>
-                    <span class="say">Hope u have a great day today ❤️😘</span><br>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="icon">💰</i> Budget Manager</h1>
+                <nav class="nav-menu">
+                    <button class="nav-btn active" data-tab="dashboard">Dashboard</button>
+                    <button class="nav-btn" data-tab="transactions">Transactions</button>
+                    <button class="nav-btn" data-tab="budgets">Budgets</button>
+                    <button class="nav-btn" data-tab="analytics">Analytics</button>
+                    <button class="nav-btn" data-tab="reports">Reports</button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Tab -->
+            <section id="dashboard" class="tab-content active">
+                <div class="dashboard-grid">
+                    <!-- Balance Cards -->
+                    <div class="balance-cards">
+                        <div class="balance-card income">
+                            <div class="card-icon">📈</div>
+                            <div class="card-content">
+                                <h3>Total Income</h3>
+                                <p class="amount" id="total-income">$0.00</p>
+                            </div>
+                        </div>
+                        <div class="balance-card expense">
+                            <div class="card-icon">📉</div>
+                            <div class="card-content">
+                                <h3>Total Expenses</h3>
+                                <p class="amount" id="total-expenses">$0.00</p>
+                            </div>
+                        </div>
+                        <div class="balance-card balance">
+                            <div class="card-icon">💵</div>
+                            <div class="card-content">
+                                <h3>Net Balance</h3>
+                                <p class="amount" id="net-balance">$0.00</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <h3>Quick Actions</h3>
+                        <div class="action-buttons">
+                            <button class="action-btn add-income">
+                                <i class="icon">💰</i>
+                                Add Income
+                            </button>
+                            <button class="action-btn add-expense">
+                                <i class="icon">💸</i>
+                                Add Expense
+                            </button>
+                            <button class="action-btn set-budget">
+                                <i class="icon">🎯</i>
+                                Set Budget
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Recent Transactions -->
+                    <div class="recent-transactions">
+                        <h3>Recent Transactions</h3>
+                        <div class="transaction-list" id="recent-transactions">
+                            <!-- Transactions will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Budget Overview -->
+                    <div class="budget-overview">
+                        <h3>Budget Overview</h3>
+                        <div class="budget-progress" id="budget-overview">
+                            <!-- Budget progress will be populated by JavaScript -->
+                        </div>
+                    </div>
                 </div>
+            </section>
+
+            <!-- Transactions Tab -->
+            <section id="transactions" class="tab-content">
+                <div class="transactions-header">
+                    <h2>Transactions</h2>
+                    <div class="transaction-controls">
+                        <button class="btn-primary" id="add-transaction-btn">Add Transaction</button>
+                        <select id="filter-category" class="filter-select">
+                            <option value="">All Categories</option>
+                        </select>
+                        <select id="filter-type" class="filter-select">
+                            <option value="">All Types</option>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="transactions-table-container">
+                    <table class="transactions-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-table-body">
+                            <!-- Transactions will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Budgets Tab -->
+            <section id="budgets" class="tab-content">
+                <div class="budgets-header">
+                    <h2>Budget Management</h2>
+                    <button class="btn-primary" id="add-budget-btn">Add Budget</button>
+                </div>
+                <div class="budgets-grid" id="budgets-grid">
+                    <!-- Budget cards will be populated by JavaScript -->
+                </div>
+            </section>
+
+            <!-- Analytics Tab -->
+            <section id="analytics" class="tab-content">
+                <div class="analytics-header">
+                    <h2>Analytics & Charts</h2>
+                    <div class="period-selector">
+                        <select id="analytics-period">
+                            <option value="month">This Month</option>
+                            <option value="quarter">This Quarter</option>
+                            <option value="year">This Year</option>
+                            <option value="all">All Time</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3>Spending by Category</h3>
+                        <canvas id="category-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Income vs Expenses</h3>
+                        <canvas id="income-expense-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Monthly Trends</h3>
+                        <canvas id="trend-chart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Budget vs Actual</h3>
+                        <canvas id="budget-chart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports Tab -->
+            <section id="reports" class="tab-content">
+                <div class="reports-header">
+                    <h2>Reports & Export</h2>
+                    <div class="report-controls">
+                        <input type="date" id="report-start-date" class="date-input">
+                        <input type="date" id="report-end-date" class="date-input">
+                        <button class="btn-secondary" id="generate-report-btn">Generate Report</button>
+                        <button class="btn-primary" id="export-csv-btn">Export CSV</button>
+                    </div>
+                </div>
+                <div class="report-content" id="report-content">
+                    <!-- Report will be generated here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Transaction Modal -->
+    <div id="transaction-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="transaction-modal-title">Add Transaction</h3>
+                <span class="close">&times;</span>
             </div>
-            <div id="clock-box">
-                <span id="clock"> 5610 days 0 hours 0 minutes 0 seconds</span> <!-- Change to "6940 days..." if needed -->
-            </div>
-            <canvas id="canvas" width="1100" height="680"></canvas>
+            <form id="transaction-form">
+                <div class="form-group">
+                    <label for="transaction-type">Type</label>
+                    <select id="transaction-type" required>
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-amount">Amount</label>
+                    <input type="number" id="transaction-amount" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-category">Category</label>
+                    <select id="transaction-category" required>
+                        <!-- Categories will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-description">Description</label>
+                    <input type="text" id="transaction-description" required>
+                </div>
+                <div class="form-group">
+                    <label for="transaction-date">Date</label>
+                    <input type="date" id="transaction-date" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancel-transaction">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Transaction</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <script>
-    (function() {
-        var canvas = $('#canvas');
-		
-        if (!canvas[0].getContext) {
-            $("#error").show();
-            return false;
-        }
+    <!-- Budget Modal -->
+    <div id="budget-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="budget-modal-title">Add Budget</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="budget-form">
+                <div class="form-group">
+                    <label for="budget-category">Category</label>
+                    <select id="budget-category" required>
+                        <!-- Categories will be populated by JavaScript -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="budget-amount">Budget Amount</label>
+                    <input type="number" id="budget-amount" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="budget-period">Period</label>
+                    <select id="budget-period" required>
+                        <option value="monthly">Monthly</option>
+                        <option value="annual">Annual</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="budget-start-date">Start Date</label>
+                    <input type="date" id="budget-start-date" required>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancel-budget">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Budget</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-        var width = canvas.width();
-        var height = canvas.height();        
-        canvas.attr("width", width);
-        canvas.attr("height", height);
-
-        var opts = {
-            seed: {
-                x: width / 2 - 20,
-                color: "rgb(190, 26, 37)",
-                scale: 2
-            },
-            branch: [
-                [535, 680, 570, 250, 500, 200, 30, 100, [
-                    [540, 500, 455, 417, 340, 400, 13, 100, [
-                        [450, 435, 434, 430, 394, 395, 2, 40]
-                    ]],
-                    [550, 445, 600, 356, 680, 345, 12, 100, [
-                        [578, 400, 648, 409, 661, 426, 3, 80]
-                    ]],
-                    [539, 281, 537, 248, 534, 217, 3, 40],
-                    [546, 397, 413, 247, 328, 244, 9, 80, [
-                        [427, 286, 383, 253, 371, 205, 2, 40],
-                        [498, 345, 435, 315, 395, 330, 4, 60]
-                    ]],
-                    [546, 357, 608, 252, 678, 221, 6, 100, [
-                        [590, 293, 646, 277, 648, 271, 2, 80]
-                    ]]
-                ]] 
-            ],
-            bloom: {
-                num: 700,
-                width: 1080,
-                height: 650,
-            },
-            footer: {
-                width: 1200,
-                height: 5,
-                speed: 10,
-            }
-        }
-
-        var tree = new Tree(canvas[0], width, height, opts);
-        var seed = tree.seed;
-        var foot = tree.footer;
-        var hold = 1;
-
-        canvas.click(function(e) {
-            playAudio();
-            var offset = canvas.offset(), x, y;
-            x = e.pageX - offset.left;
-            y = e.pageY - offset.top;
-            if (seed.hover(x, y)) {
-                hold = 0; 
-                canvas.unbind("click");
-                canvas.unbind("mousemove");
-                canvas.removeClass('hand');
-            }
-        }).mousemove(function(e) {
-            var offset = canvas.offset(), x, y;
-            x = e.pageX - offset.left;
-            y = e.pageY - offset.top;
-            canvas.toggleClass('hand', seed.hover(x, y));
-        });
-
-        var seedAnimate = eval(Jscex.compile("async", function () {
-            seed.draw();
-            while (hold) {
-                $await(Jscex.Async.sleep(10));
-            }
-            while (seed.canScale()) {
-                seed.scale(0.95);
-                $await(Jscex.Async.sleep(10));
-            }
-            while (seed.canMove()) {
-                seed.move(0, 2);
-                foot.draw();
-                $await(Jscex.Async.sleep(10));
-            }
-        }));
-
-        var growAnimate = eval(Jscex.compile("async", function () {
-            do {
-                tree.grow();
-                $await(Jscex.Async.sleep(10));
-            } while (tree.canGrow());
-        }));
-
-        var flowAnimate = eval(Jscex.compile("async", function () {
-            do {
-                tree.flower(2);
-                $await(Jscex.Async.sleep(10));
-            } while (tree.canFlower());
-        }));
-
-        var moveAnimate = eval(Jscex.compile("async", function () {
-            tree.snapshot("p1", 240, 0, 610, 680);
-            while (tree.move("p1", 500, 0)) {
-                foot.draw();
-                $await(Jscex.Async.sleep(10));
-            }
-            foot.draw();
-            tree.snapshot("p2", 500, 0, 610, 680);
-
-            canvas.parent().css("background", "url(" + tree.toDataURL('image/png') + ")");
-            canvas.css("background", "#ffe");
-            $await(Jscex.Async.sleep(300));
-            canvas.css("background", "none");
-        }));
-
-        var textAnimate = eval(Jscex.compile("async", function () {
-            $("#code").show().typewriter();
-        }));
-	    
-        var runAsync = eval(Jscex.compile("async", function () {
-            $await(seedAnimate());
-            $await(growAnimate());
-            $await(flowAnimate());
-            $await(moveAnimate());
-            textAnimate().start();
-        }));
-
-        runAsync().start();
-    })();
-    </script>
+    <!-- Scripts -->
+    <script src="js/storage.js"></script>
+    <script src="js/chart.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>
